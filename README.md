@@ -1,50 +1,145 @@
-# Welcome to your Expo app 👋
+# Mezgebe Tselot (መዝገበ ጸሎት)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An Ethiopian Orthodox Tewahedo Church mobile application built with React Native and Expo. The app provides access to the Bible, church locations, calendar, and more.
 
-## Get started
+## Features
 
-1. Install dependencies
+- 📖 **Bible Reader**: Read the Bible in English and Amharic with commentary
+- 🔍 **Search**: Search verses across the entire Bible
+- 🔖 **Bookmarks**: Save and organize your favorite verses
+- 📅 **Calendar**: Ethiopian Orthodox calendar with feast days
+- 🗺️ **Church Locator**: Find Ethiopian Orthodox churches across the United States
+- ⚙️ **Settings**: Customize language, theme, and font size
 
+## Tech Stack
+
+### Frontend
+- **React Native** with Expo
+- **Expo Router** for navigation
+- **TypeScript**
+- **React Native Maps** for church locations
+- **@gorhom/bottom-sheet** for modal interactions
+
+### Backend
+- **FastAPI** (Python)
+- **MongoDB** for data storage
+- **Motor** for async MongoDB operations
+
+## Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher)
+- Python 3.13
+- MongoDB
+- Expo Go app (for mobile testing)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/Mezgebe_Tselot.git
+   cd Mezgebe_Tselot
+   ```
+
+2. **Install frontend dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
-
+3. **Set up the backend**
    ```bash
-   npx expo start
+   cd backend
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
    ```
 
-In the output, you'll find options to open the app in a
+4. **Configure environment variables**
+   
+   Create `backend/.env`:
+   ```
+   MONGODB_URL=mongodb://localhost:27017
+   DB_NAME=mezgebe_tselot
+   SECRET_KEY=your-secret-key-here
+   ```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+5. **Start MongoDB**
+   ```bash
+   mongod
+   ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+6. **Start the backend server**
+   ```bash
+   cd backend
+   source venv/bin/activate
+   uvicorn server:app --reload --host 0.0.0.0 --port 8000
+   ```
 
-## Get a fresh project
+7. **Initialize the database**
+   ```bash
+   curl -X POST http://localhost:8000/api/init-data
+   ```
 
-When you're ready, run:
+8. **Start the Expo development server**
+   ```bash
+   npm start
+   ```
 
-```bash
-npm run reset-project
+9. **Run on your device**
+   - Scan the QR code with Expo Go (Android) or Camera app (iOS)
+   - Or press `i` for iOS simulator, `a` for Android emulator
+
+## Project Structure
+
+```
+Mezgebe_Tselot/
+├── app/                    # Expo Router pages
+│   ├── (auth)/            # Authentication screens
+│   ├── (tabs)/            # Main tab navigation
+│   └── reading.tsx        # Bible reading screen
+├── components/            # Reusable components
+├── contexts/              # React contexts (Theme, Settings)
+├── utils/                 # Utility functions and API client
+├── backend/               # FastAPI backend
+│   ├── server.py         # Main server file
+│   ├── churches.json     # Church data
+│   └── requirements.txt  # Python dependencies
+└── assets/               # Images and fonts
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## API Endpoints
 
-## Learn more
+- `GET /api/books` - Get all Bible books
+- `GET /api/books/{book}/chapters/{chapter}` - Get verses for a chapter
+- `GET /api/search` - Search verses
+- `GET /api/churches` - Get all churches
+- `GET /api/churches/nearby` - Get nearby churches
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login
 
-To learn more about developing your project with Expo, look at the following resources:
+## Development
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Running Tests
+```bash
+npm test
+```
 
-## Join the community
+### Building for Production
+```bash
+npx expo build:android
+npx expo build:ios
+```
 
-Join our community of developers creating universal apps.
+## Contributing
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License.
+
+## Acknowledgments
+
+- Ethiopian Orthodox Tewahedo Church
+- Expo and React Native communities
+- All contributors and testers
