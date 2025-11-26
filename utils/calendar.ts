@@ -117,14 +117,18 @@ export const getEthiopianTime = (date: Date, language: 'english' | 'amharic'): E
   const seconds = date.getSeconds();
   
   let period = "";
-  if (hours24 >= 6 && hours24 < 12) {
-    period = language === 'english' ? "Morning" : "ጠዋት";
-  } else if (hours24 >= 12 && hours24 < 18) {
-    period = language === 'english' ? "Afternoon" : "ከሰዓት";
-  } else if (hours24 >= 18 && hours24 <= 23) {
-    period = language === 'english' ? "Evening" : "ማታ";
+  if (language === 'english') {
+    period = hours24 < 12 ? "AM" : "PM";
   } else {
-    period = language === 'english' ? "Night" : "ሌሊት";
+    if (hours24 >= 6 && hours24 < 12) {
+      period = "ጠዋት";
+    } else if (hours24 >= 12 && hours24 < 18) {
+      period = "ከሰዓት";
+    } else if (hours24 >= 18 && hours24 <= 23) {
+      period = "ማታ";
+    } else {
+      period = "ሌሊት";
+    }
   }
 
   return { hours, minutes, seconds, period };

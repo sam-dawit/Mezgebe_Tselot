@@ -1,9 +1,10 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
 
 // Use localhost for iOS simulator, 10.0.2.2 for Android emulator
 // Use LAN IP for device access
-const BASE_URL = 'http://10.0.0.253:8000/api';
+// Use localhost for iOS simulator, 10.0.2.2 for Android emulator
+// Use LAN IP for device access
+const BASE_URL = 'http://127.0.0.1:8000/api';
 
 export interface Book {
   _id: string;
@@ -50,15 +51,6 @@ export interface Church {
     coordinates: [number, number]; // [longitude, latitude]
   };
 }
-
-// Add token interceptor
-axios.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync('userToken');
-  if (token && token !== 'guest-token') {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 export const api = {
   // Books & Verses

@@ -1,19 +1,20 @@
-import * as SecureStore from 'expo-secure-store';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { api, User } from '../utils/api';
+import { Models } from 'react-native-appwrite';
+import { account } from '../utils/appwrite';
 
 interface AuthContextType {
-  user: User | null;
+  user: Models.User<Models.Preferences> | null;
   isLoading: boolean;
-  signIn: (token: string) => Promise<void>;
+  signIn: () => Promise<void>;
   signInAsGuest: () => Promise<void>;
   signOut: () => Promise<void>;
+  checkUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,43 +23,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkUser = async () => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
-      if (token) {
-        if (token === 'guest-token') {
-          setUser({ _id: 'guest', username: 'Guest', email: '' });
-        } else {
-          const userData = await api.getMe();
-          if (userData) {
-            setUser(userData);
-          } else {
-            // Token invalid or expired
-            await signOut();
-          }
-        }
+      const session = await account.get();
+      // If user is anonymous (guest), clear session so they have to register/login
+      if (!session.email) {
+        await account.deleteSession('current');
+        setUser(null);
+      } else {
+        setUser(session);
       }
     } catch (e) {
-      console.error('Auth check failed', e);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signIn = async (token: string) => {
-    try {
-      await SecureStore.setItemAsync('userToken', token);
-      const userData = await api.getMe();
-      setUser(userData);
-    } catch (e) {
-      console.error('Sign in failed', e);
-      throw e;
-    }
+  const signIn = async () => {
+    await checkUser();
   };
 
   const signInAsGuest = async () => {
     try {
-      // Do not persist guest token so next time user opens app, they must login again
-      // await SecureStore.setItemAsync('userToken', 'guest-token');
-      setUser({ _id: 'guest', username: 'Guest', email: '' });
+      await account.createAnonymousSession();
+      await checkUser();
     } catch (e) {
       console.error('Guest sign in failed', e);
       throw e;
@@ -67,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      await SecureStore.deleteItemAsync('userToken');
+      await account.deleteSession('current');
       setUser(null);
     } catch (e) {
       console.error('Sign out failed', e);
@@ -75,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signInAsGuest, signOut }}>
+    <AuthContext.Provider value={{ user, isLoading, signIn, signInAsGuest, signOut, checkUser }}>
       {children}
     </AuthContext.Provider>
   );

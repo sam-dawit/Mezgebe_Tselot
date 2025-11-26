@@ -298,10 +298,13 @@ async def import_to_mongodb(books):
     
     for book_idx, book in enumerate(books, 1):
         # Insert book
+        testament = 'Old Testament' if book_idx <= 39 else 'New Testament'
         book_doc = {
-            'name': book['name'],
-            'book_number': book_idx,
-            'testament': 'Old Testament' if book_idx <= 39 else 'New Testament'
+            'name_english': book['name'],
+            'name_amharic': book['name'], # Placeholder
+            'chapters': len(book['chapters']),
+            'category': 'Bible',
+            'testament': testament
         }
         book_result = await db.books.insert_one(book_doc)
         book_id = book_result.inserted_id
@@ -309,26 +312,20 @@ async def import_to_mongodb(books):
         print(f"  [{book_idx}/66] {book['name']}: {len(book['chapters'])} chapters")
         
         for chapter in book['chapters']:
-            # Insert chapter
-            chapter_doc = {
-                'book_id': book_id,
-                'book_name': book['name'],
-                'chapter_number': chapter['chapter_number'],
-                'verse_count': len(chapter['verses'])
-            }
-            chapter_result = await db.chapters.insert_one(chapter_doc)
-            chapter_id = chapter_result.inserted_id
+            # Insert chapter (optional, server.py doesn't seem to use a chapters collection explicitly for querying verses, but good to have)
+            # Actually server.py doesn't use 'chapters' collection. It queries 'verses' directly.
+            # But let's keep it if it was there, or just skip it if not needed. 
+            # The script was inserting into 'chapters', let's keep it but it might be unused.
             
             # Insert verses
             verse_docs = []
             for verse in chapter['verses']:
                 verse_docs.append({
-                    'book_id': book_id,
-                    'chapter_id': chapter_id,
-                    'book_name': book['name'],
-                    'chapter_number': chapter['chapter_number'],
-                    'verse_number': verse['verse_number'],
-                    'text': verse['text']
+                    'book': book['name'],
+                    'chapter': chapter['chapter_number'],
+                    'verse': verse['verse_number'],
+                    'text_english': verse['text'],
+                    'text_amharic': "Amharic translation coming soon..." # Placeholder
                 })
             
             if verse_docs:

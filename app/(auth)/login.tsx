@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { api } from '../../utils/api';
+import { account } from '../../utils/appwrite';
 
 export default function LoginScreen() {
   const { colors } = useTheme();
@@ -19,7 +19,6 @@ export default function LoginScreen() {
   const [tempToken, setTempToken] = useState('');
 
   const handleLogin = async () => {
-    console.log('Attempting login with:', username);
     if (!username || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -27,47 +26,26 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      console.log('Calling api.login...');
-      const response = await api.login(username, password);
-      console.log('Login response:', response);
-      if (response) {
-        if (response.two_factor_required && response.temp_token) {
-          console.log('2FA required');
-          setTempToken(response.temp_token);
-          setShowVerification(true);
-        } else if (response.access_token) {
-          console.log('Login successful, signing in...');
-          await signIn(response.access_token);
-          router.replace('/(tabs)');
-        }
+      // If we are logged in (e.g. as guest), logout first
+      try {
+        await account.deleteSession('current');
+      } catch (e) {
+        // Ignore if no session
       }
-    } catch (error) {
-      console.error('Login error in component:', error);
-      Alert.alert('Login Failed', 'Invalid username or password');
+
+      await account.createEmailPasswordSession(username, password);
+      await signIn();
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      Alert.alert('Login Failed', error.message || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerify = async () => {
-    if (!verificationCode) {
-      Alert.alert('Error', 'Please enter the verification code');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await api.verify2FA(tempToken, verificationCode);
-      if (response && response.access_token) {
-        await signIn(response.access_token);
-        router.replace('/(tabs)');
-      }
-    } catch (error) {
-      Alert.alert('Verification Failed', 'Invalid code');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // 2FA not supported in this basic flow yet
+  const handleVerify = async () => {};
 
   const handleGuestLogin = () => {
     Alert.alert(

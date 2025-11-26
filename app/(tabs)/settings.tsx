@@ -51,7 +51,7 @@ export default function SettingsScreen() {
             {language === 'english' ? 'ACCOUNT' : 'መለያ'}
           </Text>
           
-          {user?._id === 'guest' ? (
+          {(!user || !user.email) ? (
             <TouchableOpacity 
               style={styles.actionRow} 
               onPress={() => router.push('/(auth)/signup')}

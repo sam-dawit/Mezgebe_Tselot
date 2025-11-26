@@ -2,10 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ID } from 'react-native-appwrite';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { api } from '../../utils/api';
-
+import { account } from '../../utils/appwrite';
 export default function SignupScreen() {
   const { colors } = useTheme();
   const { signIn } = useAuth();
@@ -15,7 +15,7 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [twoFactorMethod, setTwoFactorMethod] = useState<'none' | 'sms' | 'email'>('none');
+
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
@@ -26,13 +26,23 @@ export default function SignupScreen() {
 
     setLoading(true);
     try {
-      const response = await api.register(username, email, password, phoneNumber, twoFactorMethod);
-      if (response && response.access_token) {
-        await signIn(response.access_token);
-        router.replace('/(tabs)');
+      // Create account
+      await account.create(ID.unique(), email, password, username);
+      
+      // If we are logged in (e.g. as guest), logout first
+      try {
+        await account.deleteSession('current');
+      } catch (e) {
+        // Ignore if no session
       }
-    } catch (error) {
-      Alert.alert('Signup Failed', 'Username may already be taken');
+
+      // Sign in immediately
+      await account.createEmailPasswordSession(email, password);
+      await signIn();
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      Alert.alert('Signup Failed', error.message || 'Could not create account');
     } finally {
       setLoading(false);
     }
@@ -99,29 +109,7 @@ export default function SignupScreen() {
             />
           </View>
 
-          <View style={styles.twoFactorContainer}>
-            <Text style={[styles.label, { color: colors.text }]}>Two-Factor Authentication:</Text>
-            <View style={styles.radioGroup}>
-              {(['none', 'sms', 'email'] as const).map((method) => (
-                <TouchableOpacity
-                  key={method}
-                  style={[
-                    styles.radioButton,
-                    twoFactorMethod === method && { backgroundColor: colors.primary },
-                    { borderColor: colors.border }
-                  ]}
-                  onPress={() => setTwoFactorMethod(method)}
-                >
-                  <Text style={[
-                    styles.radioText,
-                    twoFactorMethod === method ? { color: '#FFF' } : { color: colors.text }
-                  ]}>
-                    {method.toUpperCase()}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+
 
           <TouchableOpacity
             style={[styles.button, { backgroundColor: colors.primary }]}

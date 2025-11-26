@@ -16,13 +16,14 @@ An Ethiopian Orthodox Tewahedo Church mobile application built with React Native
 ### Frontend
 - **React Native** with Expo
 - **Expo Router** for navigation
+- **Appwrite** for authentication and backend services
 - **TypeScript**
 - **React Native Maps** for church locations
 - **@gorhom/bottom-sheet** for modal interactions
 
-### Backend
+### Backend (Data Service)
 - **FastAPI** (Python)
-- **MongoDB** for data storage
+- **MongoDB** for Bible and Church data storage
 - **Motor** for async MongoDB operations
 
 ## Getting Started
@@ -32,6 +33,7 @@ An Ethiopian Orthodox Tewahedo Church mobile application built with React Native
 - Python 3.13
 - MongoDB
 - Expo Go app (for mobile testing)
+- Appwrite Cloud Account (or self-hosted)
 
 ### Installation
 
@@ -46,7 +48,13 @@ An Ethiopian Orthodox Tewahedo Church mobile application built with React Native
    npm install
    ```
 
-3. **Set up the backend**
+3. **Set up Appwrite**
+   - Create a project in the [Appwrite Console](https://cloud.appwrite.io/).
+   - Add a **Web Platform** (for development) and **Android/iOS Platforms** with bundle ID `com.mezgebe.tselot`.
+   - Enable **Email/Password** authentication in the Auth settings.
+   - Update `utils/appwrite.ts` with your Project ID and Endpoint.
+
+4. **Set up the backend**
    ```bash
    cd backend
    python3 -m venv venv
@@ -54,7 +62,7 @@ An Ethiopian Orthodox Tewahedo Church mobile application built with React Native
    pip install -r requirements.txt
    ```
 
-4. **Configure environment variables**
+5. **Configure environment variables**
    
    Create `backend/.env`:
    ```
@@ -63,31 +71,34 @@ An Ethiopian Orthodox Tewahedo Church mobile application built with React Native
    SECRET_KEY=your-secret-key-here
    ```
 
-5. **Start MongoDB**
+6. **Start MongoDB**
    ```bash
    mongod
    ```
 
-6. **Start the backend server**
+7. **Start the backend server**
    ```bash
    cd backend
    source venv/bin/activate
    uvicorn server:app --reload --host 0.0.0.0 --port 8000
    ```
 
-7. **Initialize the database**
+8. **Import Bible Data**
+   
+   Populate the database with the NKJV Bible text:
    ```bash
-   curl -X POST http://localhost:8000/api/init-data
+   cd backend
+   python3 import_bible.py
    ```
 
-8. **Start the Expo development server**
+9. **Start the Expo development server**
    ```bash
    npm start
    ```
 
-9. **Run on your device**
-   - Scan the QR code with Expo Go (Android) or Camera app (iOS)
-   - Or press `i` for iOS simulator, `a` for Android emulator
+10. **Run on your device**
+    - Scan the QR code with Expo Go (Android) or Camera app (iOS)
+    - Or press `i` for iOS simulator, `a` for Android emulator
 
 ## Project Structure
 
@@ -98,10 +109,11 @@ Mezgebe_Tselot/
 │   ├── (tabs)/            # Main tab navigation
 │   └── reading.tsx        # Bible reading screen
 ├── components/            # Reusable components
-├── contexts/              # React contexts (Theme, Settings)
-├── utils/                 # Utility functions and API client
+├── contexts/              # React contexts (Auth, Theme, Settings)
+├── utils/                 # Utility functions and API/Appwrite clients
 ├── backend/               # FastAPI backend
 │   ├── server.py         # Main server file
+│   ├── import_bible.py   # Data import script
 │   ├── churches.json     # Church data
 │   └── requirements.txt  # Python dependencies
 └── assets/               # Images and fonts
@@ -109,13 +121,15 @@ Mezgebe_Tselot/
 
 ## API Endpoints
 
+### Authentication
+Authentication is handled directly by the **Appwrite SDK** on the client side.
+
+### Data (FastAPI)
 - `GET /api/books` - Get all Bible books
 - `GET /api/books/{book}/chapters/{chapter}` - Get verses for a chapter
 - `GET /api/search` - Search verses
 - `GET /api/churches` - Get all churches
 - `GET /api/churches/nearby` - Get nearby churches
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login
 
 ## Development
 
@@ -142,4 +156,5 @@ This project is licensed under the MIT License.
 
 - Ethiopian Orthodox Tewahedo Church
 - Expo and React Native communities
+- Appwrite
 - All contributors and testers
