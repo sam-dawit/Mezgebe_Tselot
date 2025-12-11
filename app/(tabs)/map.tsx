@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Location from 'expo-location';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, FlatList, Linking, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -65,28 +66,36 @@ const STATE_COORDINATES: { [key: string]: { latitude: number; longitude: number;
 const STATES = ["All States", ...Object.keys(STATE_COORDINATES).sort()];
 
 export default function MapScreen() {
+  const { churchId } = useLocalSearchParams<{ churchId: string }>();
   const { colors } = useTheme();
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [churches, setChurches] = useState<Church[]>([]);
   const [selectedState, setSelectedState] = useState("All States");
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedChurch, setSelectedChurch] = useState<Church | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const mapRef = useRef<MapView>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        console.log('Permission to access location was denied');
+        setLocationPermissionDenied(true);
+        Alert.alert(
+          'Location not enabled',
+          'We could not access your location. You can still browse churches by state.',
+        );
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
+      setLocationPermissionDenied(false);
+      const currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation(currentLocation);
     })();
   }, []);
 
@@ -94,18 +103,44 @@ export default function MapScreen() {
     loadChurches();
   }, [selectedState]);
 
+  useEffect(() => {
+    if (churchId && churches.length > 0) {
+      const church = churches.find(c => c._id === churchId);
+      if (church) {
+        handleMarkerPress(church);
+        if (mapRef.current && church.location) {
+          mapRef.current.animateToRegion({
+            latitude: church.location.coordinates[1],
+            longitude: church.location.coordinates[0],
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }, 1000);
+        }
+      }
+    }
+  }, [churchId, churches]);
+
   const loadChurches = async () => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       console.log('Fetching churches for state:', selectedState);
       const stateParam = selectedState === "All States" ? undefined : selectedState;
       const data = await api.getChurches(stateParam);
       console.log('Fetched churches:', data.length);
       setChurches(data);
+
+      if (data.length === 0) {
+        if (stateParam) {
+          setErrorMessage('No churches found in this state yet.');
+        } else {
+          setErrorMessage('No churches available yet.');
+        }
+      }
     } catch (error) {
-      console.error("Error fetching churches:", error);
-      // More specific error for guest mode debugging
-      Alert.alert('Error', 'Failed to load churches. Please check your connection.');
+      console.error('Error fetching churches:', error);
+      setChurches([]);
+      setErrorMessage('Unable to load churches right now. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -245,14 +280,21 @@ export default function MapScreen() {
 
       {/* My Location Button */}
       <TouchableOpacity 
-        style={[styles.locationButton, { backgroundColor: colors.surface }]} 
+        style={[
+          styles.locationButton,
+          { 
+            backgroundColor: colors.surface,
+            opacity: locationPermissionDenied || !location ? 0.5 : 1,
+          },
+        ]} 
         onPress={centerMapOnUser}
+        disabled={locationPermissionDenied || !location}
       >
         <Ionicons name="locate" size={24} color={colors.primary} />
       </TouchableOpacity>
 
       {/* Church Carousel */}
-      {!selectedChurch && churches.length > 0 && (
+      {!selectedChurch && !loading && churches.length > 0 && (
         <View style={styles.carouselContainer}>
           <FlatList
             data={churches}
@@ -264,6 +306,13 @@ export default function MapScreen() {
             decelerationRate="fast"
             contentContainerStyle={styles.carouselList}
           />
+        </View>
+      )}
+
+      {/* Empty-state messaging */}
+      {!selectedChurch && !loading && churches.length === 0 && errorMessage && (
+        <View style={styles.emptyStateContainer}>
+          <Text style={[styles.emptyStateText, { color: colors.text }]}>{errorMessage}</Text>
         </View>
       )}
 
@@ -535,5 +584,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 4,
+  },
+  emptyStateContainer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  emptyStateText: {
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

@@ -8,7 +8,7 @@ import { account } from '../../utils/appwrite';
 
 export default function LoginScreen() {
   const { colors } = useTheme();
-  const { signIn, signInAsGuest } = useAuth();
+  const { signIn } = useAuth();
   const router = useRouter();
   
   const [username, setUsername] = useState('');
@@ -47,29 +47,6 @@ export default function LoginScreen() {
   // 2FA not supported in this basic flow yet
   const handleVerify = async () => {};
 
-  const handleGuestLogin = () => {
-    Alert.alert(
-      'Guest Mode',
-      'Warning: Your data will not be saved if you continue as a guest.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Continue',
-          onPress: async () => {
-            try {
-              await signInAsGuest();
-              router.replace('/(tabs)');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to sign in as guest');
-            }
-          },
-        },
-      ]
-    );
-  };
 
   return (
     <KeyboardAvoidingView 
@@ -159,13 +136,6 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.guestButton, { borderColor: colors.primary }]}
-            onPress={handleGuestLogin}
-            disabled={loading}
-          >
-            <Text style={[styles.guestButtonText, { color: colors.primary }]}>Continue as Guest</Text>
-          </TouchableOpacity>
 
               <View style={styles.footer}>
                 <Text style={[styles.footerText, { color: colors.textSecondary }]}>Don't have an account? </Text>

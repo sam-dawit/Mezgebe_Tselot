@@ -8,7 +8,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { api } from '../../utils/api';
 
 export default function SettingsScreen() {
-  const { theme, toggleTheme, colors } = useTheme();
+  const { theme, toggleTheme, colors, autoTheme, setAutoTheme } = useTheme();
   const { language, setLanguage, fontSize, setFontSize } = useSettings();
   const { user, signOut } = useAuth();
   const router = useRouter();
@@ -81,6 +81,21 @@ export default function SettingsScreen() {
           
           <View style={[styles.row, { borderBottomColor: colors.border }]}>
             <View style={styles.rowLabel}>
+              <Ionicons name="time-outline" size={22} color={colors.text} />
+              <Text style={[styles.label, { color: colors.text }]}>
+                {language === 'english' ? 'Auto Theme (Time-based)' : 'በሰዓት የሚለዋወጥ ገጽታ'}
+              </Text>
+            </View>
+            <Switch
+              value={autoTheme}
+              onValueChange={setAutoTheme}
+              trackColor={{ false: '#767577', true: colors.primary }}
+              thumbColor={'#f4f3f4'}
+            />
+          </View>
+
+          <View style={[styles.row, { borderBottomColor: 'transparent' }]}>
+            <View style={styles.rowLabel}>
               <Ionicons name="moon-outline" size={22} color={colors.text} />
               <Text style={[styles.label, { color: colors.text }]}>
                 {language === 'english' ? 'Dark Mode' : 'ጨለማ ሁነታ'}
@@ -89,6 +104,7 @@ export default function SettingsScreen() {
             <Switch
               value={theme === 'dark'}
               onValueChange={toggleTheme}
+              disabled={autoTheme}
               trackColor={{ false: '#767577', true: colors.primary }}
               thumbColor={'#f4f3f4'}
             />

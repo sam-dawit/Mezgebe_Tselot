@@ -126,10 +126,18 @@ export default function ReadingScreen() {
         <View style={styles.headerRight} />
       </View>
 
+      {language !== 'english' && (
+        <View style={[styles.noticeContainer, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.noticeText, { color: colors.textSecondary }]}>
+            የአማርኛው መጽሐፍ ቅዱስ በሂደት ላይ ነው (Amharic Bible is in progress)
+          </Text>
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={styles.content}>
-        {verses.map((verse) => (
+        {verses.map((verse, index) => (
           <TouchableOpacity
-            key={verse._id}
+            key={`${verse._id}-${index}`}
             style={styles.verseContainer}
             onPress={() => handleVersePress(verse)}
           >
@@ -142,7 +150,7 @@ export default function ReadingScreen() {
                 lineHeight: fontSize * 1.5
               }
             ]}>
-              {language === 'english' ? verse.text_english : verse.text_amharic}
+              {language === 'english' ? verse.text_english.replace(/[{}]/g, '') : verse.text_amharic}
             </Text>
           </TouchableOpacity>
         ))}
@@ -178,7 +186,7 @@ export default function ReadingScreen() {
               <ScrollView style={styles.sheetScroll}>
                 <View style={[styles.selectedVerseBox, { backgroundColor: colors.card }]}>
                   <Text style={[styles.selectedVerseText, { color: colors.text, fontSize: fontSize }]}>
-                    {language === 'english' ? selectedVerse.text_english : selectedVerse.text_amharic}
+                    {language === 'english' ? selectedVerse.text_english.replace(/[{}]/g, '') : selectedVerse.text_amharic}
                   </Text>
                 </View>
 
@@ -292,5 +300,16 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginTop: 20,
+  },
+  noticeContainer: {
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  noticeText: {
+    fontSize: 12,
+    fontStyle: 'italic',
   },
 });

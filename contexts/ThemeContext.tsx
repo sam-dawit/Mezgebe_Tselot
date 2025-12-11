@@ -44,22 +44,52 @@ interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
   colors: ThemeColors;
+  autoTheme: boolean;
+  setAutoTheme: (auto: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const getTimeBasedTheme = (): Theme => {
+  const hour = new Date().getHours();
+  // Dark between 7pm-7am, light otherwise
+  return hour >= 19 || hour < 7 ? 'dark' : 'light';
+};
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemScheme = useColorScheme();
   const [theme, setTheme] = useState<Theme>(systemScheme === 'dark' ? 'dark' : 'light');
+  const [autoTheme, setAutoThemeState] = useState<boolean>(false);
 
   useEffect(() => {
     loadTheme();
   }, []);
 
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (autoTheme) {
+      const applyTimeTheme = () => {
+        setTheme(getTimeBasedTheme());
+      };
+      applyTimeTheme();
+      interval = setInterval(applyTimeTheme, 15 * 60 * 1000); // refresh every 15 minutes
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [autoTheme]);
+
   const loadTheme = async () => {
     try {
-      const savedTheme = await AsyncStorage.getItem('theme');
-      if (savedTheme) {
+      const [savedTheme, savedAuto] = await Promise.all([
+        AsyncStorage.getItem('theme'),
+        AsyncStorage.getItem('autoTheme'),
+      ]);
+
+      if (savedAuto === 'true') {
+        setAutoThemeState(true);
+        setTheme(getTimeBasedTheme());
+      } else if (savedTheme) {
         setTheme(savedTheme as Theme);
       }
     } catch (e) {
@@ -67,7 +97,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const setAutoTheme = async (auto: boolean) => {
+    setAutoThemeState(auto);
+    try {
+      await AsyncStorage.setItem('autoTheme', auto ? 'true' : 'false');
+    } catch (e) {
+      console.error('Failed to save autoTheme', e);
+    }
+    if (auto) {
+      setTheme(getTimeBasedTheme());
+    }
+  };
+
   const toggleTheme = async () => {
+    // Manual toggle disables auto mode
+    if (autoTheme) {
+      await setAutoTheme(false);
+    }
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     try {
@@ -80,7 +126,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const colors = theme === 'light' ? lightColors : darkColors;
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, colors }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, colors, autoTheme, setAutoTheme }}>
       {children}
     </ThemeContext.Provider>
   );

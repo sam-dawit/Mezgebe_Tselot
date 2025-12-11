@@ -43,8 +43,8 @@ export default function ReaderScreen() {
 
   const handleBookPress = (book: Book) => {
     router.push({
-      pathname: '/reading',
-      params: { book: book.name_english, chapter: 1 }
+      pathname: '/chapters',
+      params: { book: book.name_english, chapters: book.chapters.toString() }
     });
   };
 

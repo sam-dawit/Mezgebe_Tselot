@@ -56,7 +56,7 @@ export default function BookmarksScreen() {
 
   const handlePress = (bookmark: Bookmark) => {
     router.push({
-      pathname: '/(tabs)/reader',
+      pathname: '/reading',
       params: { book: bookmark.book, chapter: bookmark.chapter }
     });
   };
@@ -65,7 +65,10 @@ export default function BookmarksScreen() {
     // Navigate to map and maybe pass params to center on church?
     // For now just go to map, user can find it. 
     // Ideally we'd pass coordinates but map screen needs to handle params.
-    router.push('/(tabs)/map');
+    router.push({
+      pathname: '/(tabs)/map',
+      params: { churchId: church._id }
+    });
   };
 
   return (

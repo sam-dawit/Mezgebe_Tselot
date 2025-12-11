@@ -54,17 +54,17 @@ An Ethiopian Orthodox Tewahedo Church mobile application built with React Native
    - Enable **Email/Password** authentication in the Auth settings.
    - Update `utils/appwrite.ts` with your Project ID and Endpoint.
 
-4. **Set up the backend**
+4. **Set up the backend (optional, archived in `archive/backend/`)**
    ```bash
-   cd backend
+   cd archive/backend
    python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   source venv/bin/activate  # On Windows: venv\\Scripts\\activate
    pip install -r requirements.txt
    ```
 
-5. **Configure environment variables**
+5. **Configure backend environment variables**
    
-   Create `backend/.env`:
+   Create `archive/backend/.env`:
    ```
    MONGODB_URL=mongodb://localhost:27017
    DB_NAME=mezgebe_tselot
@@ -78,7 +78,7 @@ An Ethiopian Orthodox Tewahedo Church mobile application built with React Native
 
 7. **Start the backend server**
    ```bash
-   cd backend
+   cd archive/backend
    source venv/bin/activate
    uvicorn server:app --reload --host 0.0.0.0 --port 8000
    ```
@@ -87,7 +87,7 @@ An Ethiopian Orthodox Tewahedo Church mobile application built with React Native
    
    Populate the database with the NKJV Bible text:
    ```bash
-   cd backend
+   cd archive/backend
    python3 import_bible.py
    ```
 
@@ -104,19 +104,18 @@ An Ethiopian Orthodox Tewahedo Church mobile application built with React Native
 
 ```
 Mezgebe_Tselot/
-├── app/                    # Expo Router pages
-│   ├── (auth)/            # Authentication screens
-│   ├── (tabs)/            # Main tab navigation
-│   └── reading.tsx        # Bible reading screen
-├── components/            # Reusable components
-├── contexts/              # React contexts (Auth, Theme, Settings)
-├── utils/                 # Utility functions and API/Appwrite clients
-├── backend/               # FastAPI backend
-│   ├── server.py         # Main server file
-│   ├── import_bible.py   # Data import script
-│   ├── churches.json     # Church data
-│   └── requirements.txt  # Python dependencies
-└── assets/               # Images and fonts
+├── app/                    # Expo Router pages and screens
+├── components/             # Reusable UI components
+├── contexts/               # React contexts (Auth, Theme, Settings)
+├── config/                 # App configuration (theme, constants, etc.)
+├── utils/                  # Utility functions and API/Appwrite clients
+├── scripts/                # Project scripts and tooling
+├── assets/                 # Images and fonts
+├── archive/                # Archived backend and legacy scripts
+│   ├── backend/            # FastAPI backend (optional)
+│   ├── scripts/            # Legacy scripts
+│   └── convert_bible.py    # Legacy Bible conversion script
+└── venv/                   # Local Python virtualenv (not committed)
 ```
 
 ## API Endpoints
